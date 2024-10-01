@@ -4,6 +4,10 @@
 
 本项目提供了一个使用 LLDB 验证编译器调试符号实现的测试框架。它允许您在程序执行期间验证变量值，这对于确保编译器生成的调试信息的正确性至关重要。
 
+## 测试
+
+- [Clang](clang/README.md)
+
 ## 特性
 
 - 自动设置断点和验证变量值
@@ -35,7 +39,7 @@ int main() {
 ```bash
 $ clang -g -o test_program test_program.c
 
-$ ./runtest.sh ./test_program test_program.c -v
+$ python runtest.py ./test_program test_program.c -v
 (lldb) command script import ./test.py
 (lldb) script test.run_tests_with_result('./test_program', ['test_program.c',], True, False, '/tmp/lldb_exit_code')
 Running tests for test_program.c with ./test_program
@@ -83,19 +87,19 @@ All tests passed!
 3. 运行测试：
 
    ```
-   ./runtest.sh 路径/到/你的/编译后的/程序 路径/到/你的/源文件...
+   python runtest.py 路径/到/你的/编译后的/程序 路径/到/你的/源文件...
    ```
 
    要获得详细输出，请使用：
 
    ```
-   ./runtest.sh -v 路径/到/你的/编译后的/程序 路径/到/你的/源文件...
+   python runtest.py -v 路径/到/你的/编译后的/程序 路径/到/你的/源文件...
    ```
 
    要在测试失败时进入交互模式，请使用：
 
    ```
-   ./runtest.sh -i 路径/到/你的/编译后的/程序 路径/到/你的/源文件...
+   python runtest.py -i 路径/到/你的/编译后的/程序 路径/到/你的/源文件...
    ```
 
 ## 支持的语言
@@ -141,7 +145,7 @@ All tests passed!
 3. 按照使用方法部分所述运行测试：
 
    ```
-   ./runtest.sh ./test_program test_program.c -v
+   python runtest.py ./test_program test_program.c -v
    ```
 
 ### 编写用于调试符号验证的内联测试

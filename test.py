@@ -4,8 +4,9 @@ import os
 import sys
 import argparse
 import signal
+import json
 from dataclasses import dataclass, field
-from typing import List, Optional, Set, Dict, Any
+from typing import List, Optional, Set, Dict, Any, Union
 import lldb
 
 
@@ -29,7 +30,7 @@ class Test:
 class TestResult:
     test: Test
     status: str
-    actual: Optional[str] = None
+    actual: Optional[Union[str, Set[str]]] = None
     message: Optional[str] = None
     missing: Optional[Set[str]] = None
     extra: Optional[Set[str]] = None
@@ -199,7 +200,8 @@ def parse_expected_values(source_files: List[str]) -> List[TestCase]:
     return test_cases
 
 
-def execute_tests(executable_path: str, test_cases: List[TestCase], verbose: bool, interactive: bool) -> TestResults:
+def execute_tests(executable_path: str, test_cases: List[TestCase],
+                  verbose: bool, interactive: bool) -> TestResults:
     results = TestResults()
 
     for test_case in test_cases:
@@ -242,21 +244,8 @@ def execute_tests(executable_path: str, test_cases: List[TestCase], verbose: boo
     return results
 
 
-def run_tests(executable_path: str, source_files: List[str], verbose: bool, interactive: bool) -> int:
-    test_cases = parse_expected_values(source_files)
-    if verbose:
-        log(f"Running tests for {', '.join(source_files)} with {executable_path}")
-        log(f"Found {len(test_cases)} test cases")
-
-    results = execute_tests(executable_path, test_cases,
-                            verbose, interactive)
-    print_test_results(results)
-
-    # Return 0 if all tests passed, 1 otherwise
-    return 0 if results.failed == 0 else 1
-
-
-def execute_test_case(debugger: LLDBDebugger, test_case: TestCase, all_variable_names: Set[str]) -> CaseResult:
+def execute_test_case(debugger: LLDBDebugger, test_case: TestCase,
+                      all_variable_names: Set[str]) -> CaseResult:
     results: List[TestResult] = []
 
     for test in test_case.tests:
@@ -350,23 +339,62 @@ def print_test_result(result: TestResult, verbose: bool) -> None:
             log(f"    Actual: {result.actual}")
 
 
-def run_tests_with_result(executable_path: str, source_files: List[str], verbose: bool, interactive: bool, result_path: str) -> int:
-    try:
-        exit_code = run_tests(executable_path, source_files,
-                              verbose, interactive)
-    except Exception as e:
-        log(f"An error occurred during test execution: {str(e)}")
-        raise e
-        exit_code = 2  # Use a different exit code for unexpected errors
+def run_tests(executable_path: str, source_files: List[str],
+              verbose: bool, interactive: bool) -> int:
+    test_cases = parse_expected_values(source_files)
+    if verbose:
+        log(f"Running tests for {', '.join(source_files)} with {executable_path}")
+        log(f"Found {len(test_cases)} test cases")
 
-    try:
-        with open(result_path, 'w', encoding='utf-8') as f:
-            f.write(str(exit_code))
-    except IOError as e:
-        log(f"Error writing result to file {result_path}: {str(e)}")
-        # If we can't write to the file, we should still return the exit code
+    results = execute_tests(executable_path, test_cases,
+                            verbose, interactive)
+    print_test_results(results)
 
-    return exit_code
+    # Return 0 if all tests passed, 1 otherwise
+    return 0 if results.failed == 0 else 1
+
+
+def run_tests_with_result(executable_path: str, source_files: List[str],
+                          verbose: bool, interactive: bool, result_path: str) -> int:
+    test_cases = parse_expected_values(source_files)
+    if verbose:
+        log(f"Running tests for {', '.join(source_files)} with {executable_path}")
+        log(f"Found {len(test_cases)} test cases")
+
+    results = execute_tests(executable_path, test_cases,
+                            verbose, interactive)
+
+    # Convert results to JSON-serializable format
+    json_results = {
+        "total": results.total,
+        "passed": results.passed,
+        "failed": results.failed,
+        "case_results": [
+            {
+                "source_file": cr.test_case.source_file,
+                "start_line": cr.test_case.start_line,
+                "end_line": cr.test_case.end_line,
+                "function": cr.function,
+                "results": [
+                    {
+                        "line_number": r.test.line_number,
+                        "variable": r.test.variable,
+                        "expected": r.test.expected_value,
+                        "actual": list(r.actual) if isinstance(r.actual, set) else r.actual,
+                        "status": r.status,
+                        "missing": list(r.missing) if r.missing else None,
+                        "extra": list(r.extra) if r.extra else None
+                    } for r in cr.results
+                ]
+            } for cr in results.case_results
+        ]
+    }
+
+    # Write results to JSON file
+    with open(result_path, 'w', encoding='utf-8') as f:
+        json.dump(json_results, f, indent=2)
+
+    return 0 if results.failed == 0 else 1
 
 
 def main() -> None:
