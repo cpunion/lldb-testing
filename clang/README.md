@@ -2,237 +2,250 @@
 
 ## clang --version
 
+Executing: clang --version
 Homebrew clang version 19.1.0
 Target: arm64-apple-darwin23.4.0
 Thread model: posix
 InstalledDir: /opt/homebrew/Cellar/llvm/19.1.0/bin
 
+## Two-step test
+
+The two-step test used in this test consists of the following commands:
+
+```shell
+clang -g -O2 -DTEST_INLINE=$(INLINE) -S -emit-llvm \
+    -o build/temp_$(INLINE).ll test.c
+clang -g -O0 -o build/test$(if $(filter 1,$(INLINE)),_inline)_two-step.out \
+    build/temp_$(INLINE).ll
+```
+
 ## Test results
 
-| Case   | Function                                 | Line | inline -O0 | -O0 | inline -O1 | -O1 | inline -O2 | -O2 |
-| ------ | ---------------------------------------- | ---- | ---------- | --- | ---------- | --- | ---------- | --- |
-| test.c | func_struct_params[86-103]               | 87   | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_params[86-103]               | 88   | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_params[86-103]               | 89   | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_params[86-103]               | 90   | ✅         | ✅  | ✅         | ❌  | ✅         | ❌  |
-| test.c | func_struct_params[86-103]               | 91   | ✅         | ✅  | ✅         | ❌  | ✅         | ❌  |
-| test.c | func_struct_params[86-103]               | 92   | ✅         | ✅  | ✅         | ❌  | ✅         | ❌  |
-| test.c | func_struct_params[86-103]               | 93   | ✅         | ✅  | ✅         | ❌  | ✅         | ❌  |
-| test.c | func_struct_params[86-103]               | 94   | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_struct_params[86-103]               | 95   | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_struct_params[86-103]               | 96   | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_struct_params[86-103]               | 97   | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_struct_params[86-103]               | 98   | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_struct_params[86-103]               | 99   | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_struct_params[86-103]               | 100  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_struct_params[86-103]               | 101  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_struct_params[86-103]               | 102  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_struct_params[86-103]               | 103  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_struct_params[122-139]              | 123  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_params[122-139]              | 124  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_params[122-139]              | 125  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_params[122-139]              | 126  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_params[122-139]              | 127  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_params[122-139]              | 128  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_params[122-139]              | 129  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_params[122-139]              | 130  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_struct_params[122-139]              | 131  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_struct_params[122-139]              | 132  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_struct_params[122-139]              | 133  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_struct_params[122-139]              | 134  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_struct_params[122-139]              | 135  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_struct_params[122-139]              | 136  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_struct_params[122-139]              | 137  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_struct_params[122-139]              | 138  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_struct_params[122-139]              | 139  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_struct_ptr_params[144-161]          | 145  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[144-161]          | 146  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[144-161]          | 147  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[144-161]          | 148  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[144-161]          | 149  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[144-161]          | 150  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[144-161]          | 151  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[144-161]          | 152  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[144-161]          | 153  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[144-161]          | 154  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[144-161]          | 155  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[144-161]          | 156  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[144-161]          | 157  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[144-161]          | 158  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[144-161]          | 159  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[144-161]          | 160  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[144-161]          | 161  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[179-196]          | 180  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[179-196]          | 181  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[179-196]          | 182  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[179-196]          | 183  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[179-196]          | 184  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[179-196]          | 185  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[179-196]          | 186  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[179-196]          | 187  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[179-196]          | 188  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[179-196]          | 189  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[179-196]          | 190  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[179-196]          | 191  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[179-196]          | 192  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[179-196]          | 193  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[179-196]          | 194  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[179-196]          | 195  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_struct_ptr_params[179-196]          | 196  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_if[204-206]                        | 205  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_if[204-206]                        | 206  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_if[211-216]                        | 212  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_if[211-216]                        | 213  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_if[211-216]                        | 214  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_if[211-216]                        | 215  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_if[211-216]                        | 216  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_if[221-226]                        | 222  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_if[221-226]                        | 223  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_if[221-226]                        | 224  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_if[221-226]                        | 225  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_if[221-226]                        | 226  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_if[229-231]                        | 230  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_if[229-231]                        | 231  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_for[241-244]                       | 242  | ✅         | ✅  | ❌         | ❌  | ✅         | ✅  |
-| test.c | scope_for[241-244]                       | 243  | ✅         | ✅  | ❌         | ❌  | ✅         | ✅  |
-| test.c | scope_for[241-244]                       | 244  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_for[249-252]                       | 250  | ✅         | ✅  | ❌         | ❌  | ✅         | ✅  |
-| test.c | scope_for[249-252]                       | 251  | ✅         | ✅  | ❌         | ❌  | ✅         | ✅  |
-| test.c | scope_for[249-252]                       | 252  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_switch[268-272]                    | 269  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_switch[268-272]                    | 270  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_switch[268-272]                    | 271  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_switch[268-272]                    | 272  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_switch[279-283]                    | 280  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_switch[279-283]                    | 281  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_switch[279-283]                    | 282  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_switch[279-283]                    | 283  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_switch[290-294]                    | 291  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_switch[290-294]                    | 292  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_switch[290-294]                    | 293  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_switch[290-294]                    | 294  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_switch[298-300]                    | 299  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | scope_switch[298-300]                    | 300  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 309  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 310  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 311  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 312  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 313  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 314  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 315  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 316  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 317  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 318  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 319  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 320  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 321  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 322  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 323  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 324  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 325  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 326  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 327  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 328  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 329  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 330  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 331  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 332  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 333  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 334  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 335  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 336  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 337  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 338  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 339  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 340  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[308-341] | 341  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[343-345] | 344  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_struct_param[343-345] | 345  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 361  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 362  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 363  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 364  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 365  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 366  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 367  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 368  | ✅         | ✅  | ❌         | ❌  | ❌         | ❌  |
-| test.c | func_with_all_type_params[360-384]       | 369  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 370  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 371  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 372  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 373  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 374  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 375  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 376  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 377  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 378  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 379  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 380  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 381  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 382  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 383  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[360-384]       | 384  | ✅         | ✅  | ❌         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 419  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 420  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 421  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 422  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 423  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 424  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 425  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 426  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 427  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 428  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 429  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 430  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 431  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 432  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 433  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 434  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 435  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 436  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 437  | ✅         | ✅  | ✅         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 438  | ✅         | ✅  | ✅         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 439  | ✅         | ✅  | ✅         | ✅  | ❌         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 440  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 441  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 442  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | func_with_all_type_params[418-448]       | 443  | ✅         | ✅  | ❌         | ❌  | ❌         | ❌  |
-| test.c | func_with_all_type_params[418-448]       | 444  | ✅         | ✅  | ❌         | ❌  | ❌         | ❌  |
-| test.c | func_with_all_type_params[418-448]       | 445  | ✅         | ✅  | ❌         | ❌  | ❌         | ❌  |
-| test.c | func_with_all_type_params[418-448]       | 446  | ✅         | ✅  | ❌         | ❌  | ❌         | ❌  |
-| test.c | func_with_all_type_params[418-448]       | 447  | ✅         | ✅  | ❌         | ❌  | ❌         | ❌  |
-| test.c | func_with_all_type_params[418-448]       | 448  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 500  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 501  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 502  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 503  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 504  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 505  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 506  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 507  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 508  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 509  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 510  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 511  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 512  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 513  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 514  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 515  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 516  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 517  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 518  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 519  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 520  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 521  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 522  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 523  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 524  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 525  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 526  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 527  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 528  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 529  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 530  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[499-531]                            | 531  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[550-552]                            | 551  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
-| test.c | Test[550-552]                            | 552  | ✅         | ✅  | ✅         | ✅  | ✅         | ✅  |
+Executing: python generate_summary.py results/test_O0.json results/test_inline_O0.json results/test_O1.json results/test_inline_O1.json results/test_O2.json results/test_inline_O2.json results/test_two-step.json results/test_inline_two-step.json --columns inline -O0,-O0,inline -O1,-O1,inline -O2,-O2,inline two-step,two-step
+| Function | Loc | inline -O0 | -O0 | inline -O1 | -O1 | inline -O2 | -O2 | inline two-step | two-step |
+|----------|-----|----- | ----- | ----- | ----- | ----- | ----- | ----- | -----|
+| struct_params | test.c:87 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_params | test.c:88 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+| struct_params | test.c:89 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+| struct_params | test.c:90 | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ | ✅ |
+| struct_params | test.c:91 | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ | ✅ |
+| struct_params | test.c:92 | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ | ✅ |
+| struct_params | test.c:93 | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ | ✅ |
+| struct_params | test.c:94 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| struct_params | test.c:95 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| struct_params | test.c:96 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| struct_params | test.c:97 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| struct_params | test.c:98 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| struct_params | test.c:99 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| struct_params | test.c:100 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| struct_params | test.c:101 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| struct_params | test.c:102 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| struct_params | test.c:103 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| struct_params | test.c:123 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_params | test.c:124 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_params | test.c:125 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_params | test.c:126 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_params | test.c:127 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_params | test.c:128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_params | test.c:129 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_params | test.c:130 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| struct_params | test.c:131 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| struct_params | test.c:132 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| struct_params | test.c:133 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| struct_params | test.c:134 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| struct_params | test.c:135 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| struct_params | test.c:136 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| struct_params | test.c:137 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| struct_params | test.c:138 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| struct_params | test.c:139 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| struct_ptr_params | test.c:145 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_ptr_params | test.c:146 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_ptr_params | test.c:147 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_ptr_params | test.c:148 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_ptr_params | test.c:149 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_ptr_params | test.c:150 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_ptr_params | test.c:151 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_ptr_params | test.c:152 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_ptr_params | test.c:153 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_ptr_params | test.c:154 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_ptr_params | test.c:155 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_ptr_params | test.c:156 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_ptr_params | test.c:157 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_ptr_params | test.c:158 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_ptr_params | test.c:159 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_ptr_params | test.c:160 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_ptr_params | test.c:161 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_ptr_params | test.c:180 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| struct_ptr_params | test.c:181 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| struct_ptr_params | test.c:182 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| struct_ptr_params | test.c:183 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| struct_ptr_params | test.c:184 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| struct_ptr_params | test.c:185 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| struct_ptr_params | test.c:186 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| struct_ptr_params | test.c:187 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| struct_ptr_params | test.c:188 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| struct_ptr_params | test.c:189 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| struct_ptr_params | test.c:190 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| struct_ptr_params | test.c:191 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| struct_ptr_params | test.c:192 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| struct_ptr_params | test.c:193 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| struct_ptr_params | test.c:194 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| struct_ptr_params | test.c:195 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| struct_ptr_params | test.c:196 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| scope_if | test.c:205 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_if | test.c:206 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_if | test.c:212 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_if | test.c:213 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_if | test.c:214 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_if | test.c:215 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_if | test.c:216 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_if | test.c:222 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_if | test.c:223 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_if | test.c:224 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_if | test.c:225 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_if | test.c:226 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_if | test.c:230 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_if | test.c:231 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_for | test.c:242 | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| scope_for | test.c:243 | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| scope_for | test.c:244 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_for | test.c:250 | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| scope_for | test.c:251 | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| scope_for | test.c:252 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_switch | test.c:269 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_switch | test.c:270 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_switch | test.c:271 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_switch | test.c:272 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_switch | test.c:280 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_switch | test.c:281 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_switch | test.c:282 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_switch | test.c:283 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_switch | test.c:291 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_switch | test.c:292 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_switch | test.c:293 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_switch | test.c:294 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_switch | test.c:299 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| scope_switch | test.c:300 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:309 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:310 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:311 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:312 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:313 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:314 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:315 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:316 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:317 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:318 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:319 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:320 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:321 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:322 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:323 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:324 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:325 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:326 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:327 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:328 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:329 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:330 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:331 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:332 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:333 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:334 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:335 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:336 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:337 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:338 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:339 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:340 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:341 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:344 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_struct_param | test.c:345 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_params | test.c:361 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_params | test.c:362 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ✅ |
+| all_type_params | test.c:363 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ✅ |
+| all_type_params | test.c:364 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ✅ |
+| all_type_params | test.c:365 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ✅ |
+| all_type_params | test.c:366 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ✅ |
+| all_type_params | test.c:367 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ✅ |
+| all_type_params | test.c:368 | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| all_type_params | test.c:369 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ✅ |
+| all_type_params | test.c:370 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ✅ |
+| all_type_params | test.c:371 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ✅ |
+| all_type_params | test.c:372 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ✅ |
+| all_type_params | test.c:373 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| all_type_params | test.c:374 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| all_type_params | test.c:375 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| all_type_params | test.c:376 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| all_type_params | test.c:377 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| all_type_params | test.c:378 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| all_type_params | test.c:379 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ✅ |
+| all_type_params | test.c:380 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ✅ |
+| all_type_params | test.c:381 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ✅ |
+| all_type_params | test.c:382 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ✅ |
+| all_type_params | test.c:383 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ✅ |
+| all_type_params | test.c:384 | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ✅ |
+| all_type_params | test.c:419 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_params | test.c:420 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_params | test.c:421 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_params | test.c:422 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_params | test.c:423 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_params | test.c:424 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_params | test.c:425 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_params | test.c:426 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_params | test.c:427 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_params | test.c:428 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_params | test.c:429 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_params | test.c:430 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_params | test.c:431 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_params | test.c:432 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_params | test.c:433 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_params | test.c:434 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_params | test.c:435 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_params | test.c:436 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| all_type_params | test.c:437 | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ |
+| all_type_params | test.c:438 | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ |
+| all_type_params | test.c:439 | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ |
+| all_type_params | test.c:440 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| all_type_params | test.c:441 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| all_type_params | test.c:442 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| all_type_params | test.c:443 | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| all_type_params | test.c:444 | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| all_type_params | test.c:445 | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| all_type_params | test.c:446 | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| all_type_params | test.c:447 | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| all_type_params | test.c:448 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:500 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:501 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:502 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:503 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:504 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:505 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:506 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:507 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:508 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:509 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:510 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:511 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:512 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:513 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:514 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:515 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:516 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:517 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:518 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:519 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:520 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:521 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:522 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:523 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:524 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:525 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:526 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:527 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:528 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:529 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:530 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:531 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:551 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | test.c:552 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |

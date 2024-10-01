@@ -82,7 +82,7 @@ typedef struct {
     int r;
 } big_struct;
 
-INLINE void func_struct_params(tiny_struct t, small_struct s, mid_struct m, big_struct b) {
+INLINE void struct_params(tiny_struct t, small_struct s, mid_struct m, big_struct b) {
     // Expected:
     //   all variables: t s m b global_int global_struct global_struct_ptr
     //   t.i: 1
@@ -140,7 +140,7 @@ INLINE void func_struct_params(tiny_struct t, small_struct s, mid_struct m, big_
     printf("done\n");
 }
 
-INLINE void func_struct_ptr_params(tiny_struct* t, small_struct* s, mid_struct* m, big_struct* b) {
+INLINE void struct_ptr_params(tiny_struct* t, small_struct* s, mid_struct* m, big_struct* b) {
     // Expected:
     //   all variables: t s m b global_int global_struct global_struct_ptr
     //   t->i: 1
@@ -303,7 +303,7 @@ INLINE void scope_switch(int i) {
 
 
 // Function definitions
-INLINE void func_with_all_type_struct_param(struct_with_all_type_fields s) {
+INLINE void all_type_struct_param(struct_with_all_type_fields s) {
     printf("%p\n", (void*)&s);
     // Expected:
     //   all variables: s global_int global_struct global_struct_ptr
@@ -347,7 +347,7 @@ INLINE void func_with_all_type_struct_param(struct_with_all_type_fields s) {
 }
 
 // Add this function definition near the bottom of the file
-INLINE int func_with_all_type_params(
+INLINE int all_type_params(
     int8_t i8, int16_t i16, int32_t i32, int64_t i64, int i,
     uint8_t u8, uint16_t u16, uint32_t u32, uint64_t u64, unsigned int u,
     float f32, double f64, bool b,
@@ -458,14 +458,14 @@ struct_with_all_type_fields global_struct;
 struct_with_all_type_fields* global_struct_ptr;
 
 INLINE void Test() {
-    func_struct_params((tiny_struct){1}, (small_struct){2, 3}, (mid_struct){4, 5, 6}, 
-                       (big_struct){7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
+    struct_params((tiny_struct){1}, (small_struct){2, 3}, (mid_struct){4, 5, 6}, 
+                  (big_struct){7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
     
     tiny_struct t = {1};
     small_struct s = {2, 3};
     mid_struct m = {4, 5, 6};
     big_struct b = {7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
-    func_struct_ptr_params(&t, &s, &m, &b);
+    struct_ptr_params(&t, &s, &m, &b);
 
     int i = 100;
     struct_with_all_type_fields s_all = {
@@ -534,7 +534,7 @@ INLINE void Test() {
     printf("globalInt: %d\n", global_int);
 
     printf("s_all: %p\n", (void*)&s_all);
-    func_with_all_type_struct_param(s_all);
+    all_type_struct_param(s_all);
     printf("called function with struct\n");
 
     scope_if(1);
@@ -554,14 +554,14 @@ INLINE void Test() {
     // Expected(skip):
     //   global_struct.i8: '\x01'
 
-    func_with_all_type_params(s_all.i8, s_all.i16, s_all.i32, s_all.i64,
-                              s_all.i, s_all.u8, s_all.u16, s_all.u32,
-                              s_all.u64, s_all.u,
-                              s_all.f32, s_all.f64, s_all.b,
-                              s_all.c64, s_all.c128,
-                              s_all.slice, s_all.arr, s_all.arr2,
-                              s_all.s, s_all.e,
-                              s_all, global_struct_ptr, &i);
+    all_type_params(s_all.i8, s_all.i16, s_all.i32, s_all.i64,
+                    s_all.i, s_all.u8, s_all.u16, s_all.u32,
+                    s_all.u64, s_all.u,
+                    s_all.f32, s_all.f64, s_all.b,
+                    s_all.c64, s_all.c128,
+                    s_all.slice, s_all.arr, s_all.arr2,
+                    s_all.s, s_all.e,
+                    s_all, global_struct_ptr, &i);
     printf("%d\n", (*global_struct_ptr).i8);
     printf("done\n");
     printf("\n");
