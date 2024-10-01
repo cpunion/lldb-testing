@@ -41,7 +41,7 @@ $ clang -g -o test_program test_program.c
 
 $ python runtest.py ./test_program test_program.c -v
 (lldb) command script import ./test.py
-(lldb) script test.run_tests_with_result('./test_program', ['test_program.c',], True, False, '/tmp/lldb_exit_code')
+(lldb) script test.run_tests_with_result('./test_program', ['test_program.c',], True, False, 'test_result.json')
 Running tests for test_program.c with ./test_program
 Found 1 test cases
 
