@@ -1,40 +1,20 @@
 #!/usr/bin/env python3
 # pylint: disable=missing-module-docstring,missing-class-docstring,missing-function-docstring
 
-import json
-import argparse
-import sys
 from collections import defaultdict
+from typing import List, Dict, Tuple, DefaultDict, TextIO, Optional
 
 
-def get_status_symbol(status):
+def get_status_symbol(status: str) -> str:
     return "✅" if status == "pass" else "❌"
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('files', nargs='+', help='JSON files to process')
-    parser.add_argument('--columns', help='Column names separated by commas')
-    parser.add_argument('--clang-count', type=int, default=1,
-                        help="Number of clang versions tested")
-    return parser.parse_args()
+def process_results(all_results: List[Dict], columns: List[str], clang_count: int
+                    ) -> DefaultDict[Tuple[str, int, str], List[str]]:
+    rows: DefaultDict[Tuple[str, int, str], List[str]
+                      ] = defaultdict(lambda: [""] * (len(columns) + 2))
 
-
-def main():
-    args = parse_args()
-
-    columns = args.columns.split(',')
-    clang_count = args.clang_count
-
-    # +2 for Function and loc
-    rows = defaultdict(lambda: [""] * (len(columns) + 2))
-
-    for file_index, file in enumerate(args.files):
-        print(f"Processing file: {file}", file=sys.stderr)
-
-        with open(file, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-
+    for file_index, data in enumerate(all_results):
         for case_result in data['case_results']:
             source_file = case_result['source_file']
             func = case_result['function']
@@ -50,18 +30,19 @@ def main():
                     rows[key] = [func, loc] + ["" for _ in columns]
 
                 col_index = (file_index // clang_count) + 2
-                clang_index = file_index % clang_count
                 rows[key][col_index] += get_status_symbol(status)
 
-    print(f"| Function | Loc | {' | '.join(columns)} |")
-    print(f"|----------|-----|{' | '.join(['-----' for _ in columns])}|")
+    return rows
+
+
+def print_summary_table(rows: Dict[Tuple[str, int, str], List[str]], columns: List[str],
+                        file: Optional[TextIO] = None) -> None:
+    print(f"| Function | Loc | {' | '.join(columns)} |", file=file)
+    print(
+        f"|----------|-----|{' | '.join(['-----' for _ in columns])}|", file=file)
 
     for key in sorted(rows.keys()):
         row = rows[key]
         func, loc = row[:2]
         results = row[2:]
-        print(f"| {func} | {loc} | {' | '.join(results)} |")
-
-
-if __name__ == "__main__":
-    main()
+        print(f"| {func} | {loc} | {' | '.join(results)} |", file=file)
