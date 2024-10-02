@@ -11,14 +11,20 @@ def get_status_symbol(status):
     return "✅" if status == "pass" else "❌"
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Generate summary from JSON files")
+def parse_args():
+    parser = argparse.ArgumentParser()
     parser.add_argument('files', nargs='+', help='JSON files to process')
     parser.add_argument('--columns', help='Column names separated by commas')
-    args = parser.parse_args()
+    parser.add_argument('--clang-count', type=int, default=1,
+                        help="Number of clang versions tested")
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
 
     columns = args.columns.split(',')
+    clang_count = args.clang_count
 
     # +2 for Function and loc
     rows = defaultdict(lambda: [""] * (len(columns) + 2))
@@ -38,20 +44,23 @@ def main():
                 status = result['status']
 
                 loc = f"{source_file}:{line}"
-                key = (func, loc)
+                key = (source_file, int(line), func)
 
                 if rows[key][0] == "":
-                    rows[key] = [func, loc] + [""] * len(columns)
+                    rows[key] = [func, loc] + ["" for _ in columns]
 
-                rows[key][file_index + 2] = get_status_symbol(status)
+                col_index = (file_index // clang_count) + 2
+                clang_index = file_index % clang_count
+                rows[key][col_index] += get_status_symbol(status)
 
     print(f"| Function | Loc | {' | '.join(columns)} |")
     print(f"|----------|-----|{' | '.join(['-----' for _ in columns])}|")
 
-    sorted_rows = sorted(rows.items(), key=lambda x: (
-        x[0][1].split(':')[0], int(x[0][1].split(':')[1])))
-    for (func, loc), row in sorted_rows:
-        print(f"| {func} | {loc} | {' | '.join(row[2:])} |")
+    for key in sorted(rows.keys()):
+        row = rows[key]
+        func, loc = row[:2]
+        results = row[2:]
+        print(f"| {func} | {loc} | {' | '.join(results)} |")
 
 
 if __name__ == "__main__":
