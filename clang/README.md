@@ -2,10 +2,12 @@
 
 ## clang --version
 
+```
 Homebrew clang version 19.1.0
 Target: arm64-apple-darwin23.4.0
 Thread model: posix
 InstalledDir: /opt/homebrew/Cellar/llvm/19.1.0/bin
+```
 
 ## Two-step test
 
