@@ -35,7 +35,7 @@ RESULT_FILES=$(echo "$TARGETS" | sed "s|${BUILD_DIR}/|${RESULTS_DIR}/|g" | sed '
 
 # Function to execute a command and print it
 execute() {
-    echo "Executing: $@"
+    echo "Executing: $@" >&2
     "$@"
 }
 
@@ -91,7 +91,7 @@ report() {
         echo "    ${BUILD_DIR}/temp_\$(INLINE).ll"
         echo '```'
         echo
-        echo `INLINE` is `1` or `0`.
+        echo "\`INLINE\` is \`1\` or \`0\`."
         echo
         echo "## Test results"
         echo

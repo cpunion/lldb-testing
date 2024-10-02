@@ -2,7 +2,6 @@
 
 ## clang --version
 
-Executing: clang --version
 Homebrew clang version 19.1.0
 Target: arm64-apple-darwin23.4.0
 Thread model: posix
@@ -19,9 +18,10 @@ clang -g -O0 -o build/test$(if $(filter 1,$(INLINE)),_inline)_two-step.out \
     build/temp_$(INLINE).ll
 ```
 
+`INLINE` is `1` or `0`.
+
 ## Test results
 
-Executing: python generate_summary.py results/test_O0.json results/test_inline_O0.json results/test_O1.json results/test_inline_O1.json results/test_O2.json results/test_inline_O2.json results/test_two-step.json results/test_inline_two-step.json --columns inline -O0,-O0,inline -O1,-O1,inline -O2,-O2,inline two-step,two-step
 | Function | Loc | inline -O0 | -O0 | inline -O1 | -O1 | inline -O2 | -O2 | inline two-step | two-step |
 |----------|-----|----- | ----- | ----- | ----- | ----- | ----- | ----- | -----|
 | struct_params | test.c:87 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
