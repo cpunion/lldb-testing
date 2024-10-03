@@ -10,7 +10,7 @@ import json
 from typing import List, Dict, Tuple, Any, Optional
 from dataclasses import dataclass
 from generate_summary import process_results, print_summary_table
-
+import os.path
 
 CC = "clang"
 CFLAGS = "-g"
@@ -31,14 +31,23 @@ class TestConfig:
 
 
 TEST_MATRIX = [
-    TestConfig("inline -O0", "0", "1", "test_inline_O0"),
-    TestConfig("-O0", "0", "0", "test_O0"),
-    TestConfig("inline -O1", "1", "1", "test_inline_O1"),
-    TestConfig("-O1", "1", "0", "test_O1"),
-    TestConfig("inline -O2", "2", "1", "test_inline_O2"),
-    TestConfig("-O2", "2", "0", "test_O2"),
-    TestConfig("inline two-step", "two-step", "1", "test_inline_two-step"),
-    TestConfig("two-step", "two-step", "0", "test_two-step"),
+    TestConfig(name="inline -O0", opt="0", inline="1",
+               file_prefix="test_inline_O0"),
+    TestConfig(name="-O0", opt="0", inline="0", file_prefix="test_O0"),
+    TestConfig(name="inline -O1", opt="1", inline="1",
+               file_prefix="test_inline_O1"),
+    TestConfig(name="-O1", opt="1", inline="0", file_prefix="test_O1"),
+    TestConfig(name="inline -O2", opt="2", inline="1",
+               file_prefix="test_inline_O2"),
+    TestConfig(name="-O2", opt="2", inline="0", file_prefix="test_O2"),
+    TestConfig(name="inline two_step", opt="two_step",
+               inline="1", file_prefix="test_inline_two_step"),
+    TestConfig(name="two_step", opt="two_step",
+               inline="0", file_prefix="test_two_step"),
+    TestConfig(name="inline clang_llc", opt="clang_llc",
+               inline="1", file_prefix="test_inline_clang_llc"),
+    TestConfig(name="clang_llc", opt="clang_llc",
+               inline="0", file_prefix="test_clang_llc"),
 ]
 
 COLUMNS = [test.name for test in TEST_MATRIX]
@@ -60,11 +69,26 @@ def execute(cmd: List[str], stdout: Optional[Any] = None,
     subprocess.run(cmd, check=True, stdout=stdout, env=env)
 
 
+def get_tool_path(clang_path: str, tool_name: str) -> str:
+    if not os.path.exists(clang_path):
+        return tool_name
+
+    clang_dir = os.path.dirname(clang_path)
+    tool_path = os.path.join(clang_dir, tool_name)
+
+    if os.path.exists(tool_path):
+        return tool_path
+    else:
+        return tool_name
+
+
 def build(clang_versions: List[str]) -> None:
     for i, clang_path in enumerate(clang_versions):
         print(f"Building with {clang_path}")
         env = os.environ.copy()
         env['CC'] = clang_path
+        llc_path = get_tool_path(clang_path, "llc")
+        dsymutil_path = get_tool_path(clang_path, "dsymutil")
 
         for t in TEST_MATRIX:
             out_file = t.get_output_file(i, "out", BUILD_DIR)
@@ -73,7 +97,7 @@ def build(clang_versions: List[str]) -> None:
             os.makedirs(os.path.dirname(out_file), exist_ok=True)
             os.makedirs(os.path.dirname(ll_file), exist_ok=True)
 
-            if t.opt == "two-step":
+            if t.opt == "two_step":
                 intermediate_ll_file = t.get_output_file(i, "ll", BUILD_DIR)
                 execute([
                     clang_path, CFLAGS, "-O2",
@@ -82,6 +106,20 @@ def build(clang_versions: List[str]) -> None:
                 ], env=env)
                 execute([clang_path, CFLAGS, "-O0", "-o",
                         out_file, intermediate_ll_file], env=env)
+            elif t.opt == "clang_llc":
+                intermediate_ll_file = t.get_output_file(i, "ll", BUILD_DIR)
+                o_file = t.get_output_file(i, "o", BUILD_DIR)
+                execute([
+                    clang_path, CFLAGS, "-O2",
+                    f"-DTEST_INLINE={t.inline}",
+                    "-S", "-emit-llvm", "-o", intermediate_ll_file, SOURCE
+                ], env=env)
+                execute([llc_path, "-filetype=obj", "-o", o_file,
+                        intermediate_ll_file], env=env)
+                execute([clang_path, CFLAGS, "-O0",
+                        "-o", out_file, o_file], env=env)
+                # Add dsymutil step
+                execute([dsymutil_path, out_file], env=env)
             else:
                 execute([
                     clang_path, CFLAGS, f"-O{t.opt}",
@@ -142,14 +180,14 @@ def report(clang_versions: List[str]) -> None:
     with open("README.md", "w", encoding="utf-8") as f:
         f.write("# clang test summary\n\n")
 
-        f.write("## Two-step test\n\n")
+        f.write("## Two_step test\n\n")
         f.write(
-            "The two-step test used in this test consists of the following commands:\n\n")
+            "The two_step test used in this test consists of the following commands:\n\n")
         f.write("```shell\n")
         f.write(f"{CC} {CFLAGS} -O2 -DTEST_INLINE=$(INLINE) -S -emit-llvm \\\n")
         f.write(f"    -o {BUILD_DIR}/temp_$(INLINE).ll {SOURCE}\n")
         f.write(
-            f"{CC} {CFLAGS} -O0 -o {BUILD_DIR}/test$(if $(filter 1,$(INLINE)),_inline)_two-step.out \\\n")
+            f"{CC} {CFLAGS} -O0 -o {BUILD_DIR}/test$(if $(filter 1,$(INLINE)),_inline)_two_step.out \\\n")
         f.write(f"    {BUILD_DIR}/temp_$(INLINE).ll\n")
         f.write("```\n\n")
         f.write("`INLINE` is `1` or `0`.\n\n")
