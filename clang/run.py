@@ -2,17 +2,16 @@
 # pylint: disable=missing-module-docstring,missing-class-docstring,missing-function-docstring
 
 import os
+import os.path
 import subprocess
 import sys
 import glob
 import argparse
 import json
+import multiprocessing
 from typing import List, Dict, Tuple, Any, Optional
 from dataclasses import dataclass
 from generate_summary import process_results, print_summary_table
-import os.path
-import multiprocessing
-from functools import partial
 
 CC = "clang"
 CFLAGS = "-g"
@@ -180,23 +179,15 @@ def test(clang_versions: List[str]) -> None:
 def report(clang_versions: List[str]) -> None:
     print("Generating summary...")
 
-    all_results: List[Dict[str, Any]] = []
-    version_summaries: List[Tuple[int, str, Dict[str, Dict[str, int]]]] = []
+    all_results: Dict[str, Dict[str, Dict]] = {}
 
-    for i, clang_path in enumerate(clang_versions):
-        version_results = {col: {"failed": 0, "total": 0} for col in COLUMNS}
-
+    for clang_path in clang_versions:
+        all_results[clang_path] = {}
         for t in TEST_MATRIX:
-            result_file = t.get_output_file(i, "json", RESULTS_DIR)
-
-            if os.path.exists(result_file):
-                with open(result_file, 'r', encoding="utf-8") as json_file:
-                    data = json.load(json_file)
-                    version_results[t.name]["failed"] += data.get('failed', 0)
-                    version_results[t.name]["total"] += data.get('total', 0)
-                all_results.append(data)
-
-        version_summaries.append((i, clang_path, version_results))
+            result_file = t.get_output_file(
+                clang_versions.index(clang_path), "json", RESULTS_DIR)
+            with open(result_file, 'r', encoding="utf-8") as json_file:
+                all_results[clang_path][t.name] = json.load(json_file)
 
     with open("README.md", "w", encoding="utf-8") as f:
         f.write("# clang test summary\n\n")
@@ -232,14 +223,24 @@ def report(clang_versions: List[str]) -> None:
             "`INLINE` is `1` or `0`, and `OPT` is `2` for O2_llc or `0` for O0_llc.\n\n")
 
         f.write("## Test results\n\n")
-        for i, clang_path, rs in version_summaries:
-            failed = sum(rs[col]['failed'] for col in COLUMNS)
-            total = sum(rs[col]['total'] for col in COLUMNS)
+        for i, clang_path in enumerate(clang_versions):
+            version_results = {col: {"failed": 0, "total": 0}
+                               for col in COLUMNS}
+
+            for t in TEST_MATRIX:
+                result_file = t.get_output_file(i, "json", RESULTS_DIR)
+                with open(result_file, 'r', encoding="utf-8") as json_file:
+                    data = json.load(json_file)
+                    version_results[t.name]["failed"] += data.get('failed', 0)
+                    version_results[t.name]["total"] += data.get('total', 0)
+
+            failed = sum(version_results[col]['failed'] for col in COLUMNS)
+            total = sum(version_results[col]['total'] for col in COLUMNS)
             f.write(f"Version {i} failed: {failed}/{total}\n\n")
             f.write("| " + " | ".join(COLUMNS) + " |\n")
             f.write("| " + " | ".join(["---" for _ in COLUMNS]) + " |\n")
             f.write(
-                "| " + " | ".join([f"{rs[col]['failed']}/{rs[col]['total']}" for col in COLUMNS]) + " |\n\n")
+                "| " + " | ".join([f"{version_results[col]['failed']}/{version_results[col]['total']}" for col in COLUMNS]) + " |\n\n")
 
             clang_version = subprocess.check_output(
                 [clang_path, "--version"]).decode().strip()
@@ -249,7 +250,7 @@ def report(clang_versions: List[str]) -> None:
 
         f.write("## Detailed results\n\n")
         processed_results = process_results(
-            all_results, COLUMNS, len(clang_versions))
+            all_results, clang_versions, COLUMNS)
         print_summary_table(processed_results, COLUMNS, file=f)
 
     print("Summary generated in README.md")

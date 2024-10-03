@@ -9,28 +9,32 @@ def get_status_symbol(status: str) -> str:
     return "✅" if status == "pass" else "❌"
 
 
-def process_results(all_results: List[Dict], columns: List[str], clang_count: int
+def process_results(all_results: Dict[str, Dict[str, Dict]],
+                    clang_versions: List[str],
+                    columns: List[str]
                     ) -> DefaultDict[Tuple[str, int, str], List[str]]:
     rows: DefaultDict[Tuple[str, int, str], List[str]
                       ] = defaultdict(lambda: [""] * (len(columns) + 2))
 
-    for file_index, data in enumerate(all_results):
-        for case_result in data['case_results']:
-            source_file = case_result['source_file']
-            func = case_result['function']
+    for _, version in enumerate(clang_versions):
+        for column in columns:
+            data = all_results[version][column]
+            for case_result in data['case_results']:
+                source_file = case_result['source_file']
+                func = case_result['function']
 
-            for result in case_result['results']:
-                line = result['line_number']
-                status = result['status']
+                for result in case_result['results']:
+                    line = result['line_number']
+                    status = result['status']
 
-                loc = f"{source_file}:{line}"
-                key = (source_file, int(line), func)
+                    loc = f"{source_file}:{line}"
+                    key = (source_file, int(line), func)
 
-                if rows[key][0] == "":
-                    rows[key] = [func, loc] + ["" for _ in columns]
+                    if rows[key][0] == "":
+                        rows[key] = [func, loc] + ["" for _ in columns]
 
-                col_index = (file_index // clang_count) + 2
-                rows[key][col_index] += get_status_symbol(status)
+                    col_index = columns.index(column) + 2
+                    rows[key][col_index] += get_status_symbol(status)
 
     return rows
 
