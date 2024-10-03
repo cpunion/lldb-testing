@@ -88,59 +88,71 @@ def get_tool_path(clang_path: str, tool_name: str) -> str:
         return tool_name
 
 
+def build_single_config(args: Tuple[int, TestConfig, str, str, str]) -> None:
+    i, t, clang_path, llc_path, dsymutil_path = args
+    env = os.environ.copy()
+    env['CC'] = clang_path
+
+    out_file = t.get_output_file(i, "out", BUILD_DIR)
+    ll_file = t.get_output_file(i, "ll", BUILD_DIR)
+
+    os.makedirs(os.path.dirname(out_file), exist_ok=True)
+    os.makedirs(os.path.dirname(ll_file), exist_ok=True)
+
+    if t.opt == "O2_O0":
+        intermediate_ll_file = t.get_output_file(i, "ll", BUILD_DIR)
+        execute([
+            clang_path, CFLAGS, "-O2",
+            f"-DTEST_INLINE={t.inline}",
+            "-S", "-emit-llvm", "-o", intermediate_ll_file, SOURCE
+        ], env=env)
+        execute([clang_path, CFLAGS, "-O0", "-o",
+                out_file, intermediate_ll_file], env=env)
+    elif t.opt in ["O2_llc", "O0_llc"]:
+        intermediate_ll_file = t.get_output_file(i, "ll", BUILD_DIR)
+        o_file = t.get_output_file(i, "o", BUILD_DIR)
+        opt_level = "2" if t.opt == "O2_llc" else "0"
+        execute([
+            clang_path, CFLAGS, f"-O{opt_level}",
+            f"-DTEST_INLINE={t.inline}",
+            "-S", "-emit-llvm", "-o", intermediate_ll_file, SOURCE
+        ], env=env)
+        execute([llc_path, "-filetype=obj", "-o", o_file,
+                intermediate_ll_file], env=env)
+        execute([clang_path, CFLAGS, "-O0",
+                "-o", out_file, o_file], env=env)
+        execute([dsymutil_path, out_file], env=env)
+    else:
+        execute([
+            clang_path, CFLAGS, f"-O{t.opt}",
+            f"-DTEST_INLINE={t.inline}",
+            "-o", out_file, SOURCE
+        ], env=env)
+        execute([
+            clang_path, CFLAGS, f"-O{t.opt}",
+            f"-DTEST_INLINE={t.inline}",
+            "-S", "-emit-llvm", "-o", ll_file, SOURCE
+        ], env=env)
+
+
 def build(clang_versions: List[str]) -> None:
+    build_args = []
     for i, clang_path in enumerate(clang_versions):
-        print(f"Building with {clang_path}")
-        env = os.environ.copy()
-        env['CC'] = clang_path
+        print(f"Preparing build for {clang_path}")
         llc_path = get_tool_path(clang_path, "llc")
         dsymutil_path = get_tool_path(clang_path, "dsymutil")
-
         for t in TEST_MATRIX:
-            out_file = t.get_output_file(i, "out", BUILD_DIR)
-            ll_file = t.get_output_file(i, "ll", BUILD_DIR)
+            build_args.append((i, t, clang_path, llc_path, dsymutil_path))
 
-            os.makedirs(os.path.dirname(out_file), exist_ok=True)
-            os.makedirs(os.path.dirname(ll_file), exist_ok=True)
-
-            if t.opt == "O2_O0":
-                intermediate_ll_file = t.get_output_file(i, "ll", BUILD_DIR)
-                execute([
-                    clang_path, CFLAGS, "-O2",
-                    f"-DTEST_INLINE={t.inline}",
-                    "-S", "-emit-llvm", "-o", intermediate_ll_file, SOURCE
-                ], env=env)
-                execute([clang_path, CFLAGS, "-O0", "-o",
-                        out_file, intermediate_ll_file], env=env)
-            elif t.opt in ["O2_llc", "O0_llc"]:
-                intermediate_ll_file = t.get_output_file(i, "ll", BUILD_DIR)
-                o_file = t.get_output_file(i, "o", BUILD_DIR)
-                opt_level = "2" if t.opt == "O2_llc" else "0"
-                execute([
-                    clang_path, CFLAGS, f"-O{opt_level}",
-                    f"-DTEST_INLINE={t.inline}",
-                    "-S", "-emit-llvm", "-o", intermediate_ll_file, SOURCE
-                ], env=env)
-                execute([llc_path, "-filetype=obj", "-o", o_file,
-                        intermediate_ll_file], env=env)
-                execute([clang_path, CFLAGS, "-O0",
-                        "-o", out_file, o_file], env=env)
-                # Add dsymutil step
-                execute([dsymutil_path, out_file], env=env)
-            else:
-                execute([
-                    clang_path, CFLAGS, f"-O{t.opt}",
-                    f"-DTEST_INLINE={t.inline}",
-                    "-o", out_file, SOURCE
-                ], env=env)
-                execute([
-                    clang_path, CFLAGS, f"-O{t.opt}",
-                    f"-DTEST_INLINE={t.inline}",
-                    "-S", "-emit-llvm", "-o", ll_file, SOURCE
-                ], env=env)
+    with multiprocessing.Pool() as pool:
+        pool.map(build_single_config, build_args)
 
 
-def run_single_test(t: TestConfig, i: int, clang_path: str, env: Dict[str, str]) -> None:
+def run_single_test(args: Tuple[int, TestConfig, str]) -> None:
+    i, t, clang_path = args
+    env = os.environ.copy()
+    env['CC'] = clang_path
+
     out_file = t.get_output_file(i, "out", BUILD_DIR)
     result_file = t.get_output_file(i, "json", RESULTS_DIR)
 
@@ -156,19 +168,13 @@ def run_single_test(t: TestConfig, i: int, clang_path: str, env: Dict[str, str])
         print(f"Error occurred while testing {out_file}", file=sys.stderr)
 
 
-def run_tests_for_version(args: Tuple[int, str]) -> None:
-    i, clang_path = args
-    print(f"Testing with {clang_path}")
-    env = os.environ.copy()
-    env['CC'] = clang_path
-
-    for t in TEST_MATRIX:
-        run_single_test(t, i, clang_path, env)
-
-
 def test(clang_versions: List[str]) -> None:
+    test_args = [(i, t, clang_path)
+                 for i, clang_path in enumerate(clang_versions)
+                 for t in TEST_MATRIX]
+
     with multiprocessing.Pool() as pool:
-        pool.map(run_tests_for_version, enumerate(clang_versions))
+        pool.map(run_single_test, test_args)
 
 
 def report(clang_versions: List[str]) -> None:
