@@ -11,6 +11,8 @@ from typing import List, Dict, Tuple, Any, Optional
 from dataclasses import dataclass
 from generate_summary import process_results, print_summary_table
 import os.path
+import multiprocessing
+from functools import partial
 
 CC = "clang"
 CFLAGS = "-g"
@@ -40,14 +42,18 @@ TEST_MATRIX = [
     TestConfig(name="inline -O2", opt="2", inline="1",
                file_prefix="test_inline_O2"),
     TestConfig(name="-O2", opt="2", inline="0", file_prefix="test_O2"),
-    TestConfig(name="inline two_step", opt="two_step",
-               inline="1", file_prefix="test_inline_two_step"),
-    TestConfig(name="two_step", opt="two_step",
-               inline="0", file_prefix="test_two_step"),
-    TestConfig(name="inline clang_llc", opt="clang_llc",
-               inline="1", file_prefix="test_inline_clang_llc"),
-    TestConfig(name="clang_llc", opt="clang_llc",
-               inline="0", file_prefix="test_clang_llc"),
+    TestConfig(name="inline O2_O0", opt="O2_O0",
+               inline="1", file_prefix="test_inline_O2_O0"),
+    TestConfig(name="O2_O0", opt="O2_O0",
+               inline="0", file_prefix="test_O2_O0"),
+    TestConfig(name="inline O2_llc", opt="O2_llc",
+               inline="1", file_prefix="test_inline_O2_llc"),
+    TestConfig(name="O2_llc", opt="O2_llc",
+               inline="0", file_prefix="test_O2_llc"),
+    TestConfig(name="inline O0_llc", opt="O0_llc",
+               inline="1", file_prefix="test_inline_O0_llc"),
+    TestConfig(name="O0_llc", opt="O0_llc",
+               inline="0", file_prefix="test_O0_llc"),
 ]
 
 COLUMNS = [test.name for test in TEST_MATRIX]
@@ -97,7 +103,7 @@ def build(clang_versions: List[str]) -> None:
             os.makedirs(os.path.dirname(out_file), exist_ok=True)
             os.makedirs(os.path.dirname(ll_file), exist_ok=True)
 
-            if t.opt == "two_step":
+            if t.opt == "O2_O0":
                 intermediate_ll_file = t.get_output_file(i, "ll", BUILD_DIR)
                 execute([
                     clang_path, CFLAGS, "-O2",
@@ -106,11 +112,12 @@ def build(clang_versions: List[str]) -> None:
                 ], env=env)
                 execute([clang_path, CFLAGS, "-O0", "-o",
                         out_file, intermediate_ll_file], env=env)
-            elif t.opt == "clang_llc":
+            elif t.opt in ["O2_llc", "O0_llc"]:
                 intermediate_ll_file = t.get_output_file(i, "ll", BUILD_DIR)
                 o_file = t.get_output_file(i, "o", BUILD_DIR)
+                opt_level = "2" if t.opt == "O2_llc" else "0"
                 execute([
-                    clang_path, CFLAGS, "-O2",
+                    clang_path, CFLAGS, f"-O{opt_level}",
                     f"-DTEST_INLINE={t.inline}",
                     "-S", "-emit-llvm", "-o", intermediate_ll_file, SOURCE
                 ], env=env)
@@ -133,27 +140,35 @@ def build(clang_versions: List[str]) -> None:
                 ], env=env)
 
 
+def run_single_test(t: TestConfig, i: int, clang_path: str, env: Dict[str, str]) -> None:
+    out_file = t.get_output_file(i, "out", BUILD_DIR)
+    result_file = t.get_output_file(i, "json", RESULTS_DIR)
+
+    os.makedirs(os.path.dirname(result_file), exist_ok=True)
+
+    try:
+        cmd = ["python", "../runtest.py"]
+        if os.environ.get("VERBOSE"):
+            cmd.append("-v")
+        cmd.extend(["-r", result_file, out_file, SOURCE])
+        execute(cmd, env=env)
+    except subprocess.CalledProcessError:
+        print(f"Error occurred while testing {out_file}", file=sys.stderr)
+
+
+def run_tests_for_version(args: Tuple[int, str]) -> None:
+    i, clang_path = args
+    print(f"Testing with {clang_path}")
+    env = os.environ.copy()
+    env['CC'] = clang_path
+
+    for t in TEST_MATRIX:
+        run_single_test(t, i, clang_path, env)
+
+
 def test(clang_versions: List[str]) -> None:
-    for i, clang_path in enumerate(clang_versions):
-        print(f"Testing with {clang_path}")
-        env = os.environ.copy()
-        env['CC'] = clang_path
-
-        for t in TEST_MATRIX:
-            out_file = t.get_output_file(i, "out", BUILD_DIR)
-            result_file = t.get_output_file(i, "json", RESULTS_DIR)
-
-            os.makedirs(os.path.dirname(result_file), exist_ok=True)
-
-            try:
-                cmd = ["python", "../runtest.py"]
-                if os.environ.get("VERBOSE"):
-                    cmd.append("-v")
-                cmd.extend(["-r", result_file, out_file, SOURCE])
-                execute(cmd, env=env)
-            except subprocess.CalledProcessError:
-                print(
-                    f"Error occurred while testing {out_file}", file=sys.stderr)
+    with multiprocessing.Pool() as pool:
+        pool.map(run_tests_for_version, enumerate(clang_versions))
 
 
 def report(clang_versions: List[str]) -> None:
@@ -180,17 +195,35 @@ def report(clang_versions: List[str]) -> None:
     with open("README.md", "w", encoding="utf-8") as f:
         f.write("# clang test summary\n\n")
 
-        f.write("## Two_step test\n\n")
+        f.write("## O2_O0 test\n\n")
         f.write(
-            "The two_step test used in this test consists of the following commands:\n\n")
+            "The O2_O0 test used in this test consists of the following commands:\n\n")
         f.write("```shell\n")
         f.write(f"{CC} {CFLAGS} -O2 -DTEST_INLINE=$(INLINE) -S -emit-llvm \\\n")
         f.write(f"    -o {BUILD_DIR}/temp_$(INLINE).ll {SOURCE}\n")
         f.write(
-            f"{CC} {CFLAGS} -O0 -o {BUILD_DIR}/test$(if $(filter 1,$(INLINE)),_inline)_two_step.out \\\n")
+            f"clang {CFLAGS} -O0 -o {BUILD_DIR}/test$(if $(filter 1,$(INLINE)),_inline)_O2_O0.out \\\n")
         f.write(f"    {BUILD_DIR}/temp_$(INLINE).ll\n")
         f.write("```\n\n")
         f.write("`INLINE` is `1` or `0`.\n\n")
+
+        f.write("## O2_llc and O0_llc tests\n\n")
+        f.write(
+            "The O2_llc and O0_llc tests used in this test consist of the following commands:\n\n")
+        f.write("```shell\n")
+        f.write(
+            f"clang {CFLAGS} -O$(OPT) -DTEST_INLINE=$(INLINE) -S -emit-llvm \\\n")
+        f.write(f"    -o {BUILD_DIR}/temp_$(INLINE).ll {SOURCE}\n")
+        f.write(
+            f"llc -filetype=obj -o {BUILD_DIR}/temp_$(INLINE).o {BUILD_DIR}/temp_$(INLINE).ll\n")
+        f.write(
+            f"clang {CFLAGS} -O0 -o {BUILD_DIR}/test$(if $(filter 1,$(INLINE)),_inline)_O$(OPT)_llc.out \\\n")
+        f.write(f"    {BUILD_DIR}/temp_$(INLINE).o\n")
+        f.write(
+            f"dsymutil {BUILD_DIR}/test$(if $(filter 1,$(INLINE)),_inline)_O$(OPT)_llc.out\n")
+        f.write("```\n\n")
+        f.write(
+            "`INLINE` is `1` or `0`, and `OPT` is `2` for O2_llc or `0` for O0_llc.\n\n")
 
         f.write("## Test results\n\n")
         for i, clang_path, rs in version_summaries:

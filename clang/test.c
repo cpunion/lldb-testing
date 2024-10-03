@@ -22,7 +22,7 @@ typedef struct {
 typedef struct {
     // base base;  // Commented out as it's commented in the original
     int i;
-} e;
+} E;
 
 // StructWithAllTypeFields struct
 typedef struct struct_with_all_type_fields {
@@ -44,9 +44,9 @@ typedef struct struct_with_all_type_fields {
     int* slice;
     int slice_len;
     int arr[3];
-    e arr2[3];
+    E arr2[3];
     char* s;
-    e e;
+    E e;
     struct struct_with_all_type_fields* pf;  // recursive
     int* pi;
     // interface, map, chan, error, and function pointer are omitted as requested
@@ -352,21 +352,28 @@ INLINE int all_type_params(
     uint8_t u8, uint16_t u16, uint32_t u32, uint64_t u64, unsigned int u,
     float f32, double f64, bool b,
     float complex c64, double complex c128,
-    int* slice, int arr[3], e arr2[3],
-    char* s, e e,
+    int* slice, int arr[3], E arr2[3],
+    char* s, E e,
     struct_with_all_type_fields f, struct_with_all_type_fields* pf, int* pi
     // interface, map, chan, error, and function pointer are omitted as requested
 ) {
     // Expected:
-    //   all variables: i8 i16 i32 i64 i u8 u16 u32 u64 u f32 f64 b c64 c128 slice arr arr2 e f global_int global_struct global_struct_ptr pf pi s
+    //   all variables: i8 i16 i32 i64 i u8 u16 u32 u64 u f32 f64 b c64 c128 slice arr arr2 e f pf pi s global_int global_struct global_struct_ptr
+    //   i8: '\x01'
+    //   i16: 2
     //   i32: 3
     //   i64: 4
     //   i: 5
+    //   u8: '\x06'
+    //   u16: 7
     //   u32: 8
     //   u64: 9
     //   u: 10
     //   f32: 11
     //   f64: 12
+    //   b: true
+    //   c64: 13 + 14i
+    //   c128: 15 + 16i
     //   slice[0]: 21
     //   slice[1]: 22
     //   slice[2]: 23
@@ -377,11 +384,6 @@ INLINE int all_type_params(
     //   arr2[1].i: 28
     //   arr2[2].i: 29
     //   e.i: 30
-    //   i8: '\x12'
-    //   i16: 2
-    //   u8: '\x06'
-    //   u16: 7
-    //   b: true
     printf("%d %d %d %lld %d %u %u %u %llu %u %f %f %d %f %f %p %d %d %d %s %d %p %p %p\n",
            i8, i16, i32, i64, i, u8, u16, u32, u64, u, f32, f64, b,
            crealf(c64), crealf(c128),
@@ -403,9 +405,9 @@ INLINE int all_type_params(
     b = false;
     c64 = 21 + 22 * I;
     c128 = 23 + 24 * I;
-    slice[0] = 31; slice[1] = 32; slice[2] = 33;
-    arr[0] = 34; arr[1] = 35; arr[2] = 36;
-    arr2[0].i = 37; arr2[1].i = 38; arr2[2].i = 39;
+    slice = (int[]){31, 32, 33};
+    arr = (int[]){34, 35, 36};
+    arr2 = (E[3]){{37}, {38}, {39}};
     s = "world";
     e.i = 40;
 
@@ -533,6 +535,15 @@ INLINE void Test() {
     global_struct = s_all;
     printf("globalInt: %d\n", global_int);
 
+    all_type_params(s_all.i8, s_all.i16, s_all.i32, s_all.i64,
+                    s_all.i, s_all.u8, s_all.u16, s_all.u32,
+                    s_all.u64, s_all.u,
+                    s_all.f32, s_all.f64, s_all.b,
+                    s_all.c64, s_all.c128,
+                    s_all.slice, s_all.arr, s_all.arr2,
+                    s_all.s, s_all.e,
+                    s_all, global_struct_ptr, &i);
+
     printf("s_all: %p\n", (void*)&s_all);
     all_type_struct_param(s_all);
     printf("called function with struct\n");
@@ -554,14 +565,6 @@ INLINE void Test() {
     // Expected(skip):
     //   global_struct.i8: '\x01'
 
-    all_type_params(s_all.i8, s_all.i16, s_all.i32, s_all.i64,
-                    s_all.i, s_all.u8, s_all.u16, s_all.u32,
-                    s_all.u64, s_all.u,
-                    s_all.f32, s_all.f64, s_all.b,
-                    s_all.c64, s_all.c128,
-                    s_all.slice, s_all.arr, s_all.arr2,
-                    s_all.s, s_all.e,
-                    s_all, global_struct_ptr, &i);
     printf("%d\n", (*global_struct_ptr).i8);
     printf("done\n");
     printf("\n");
